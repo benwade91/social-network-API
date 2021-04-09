@@ -11,7 +11,8 @@ app.use(require('./routes'));
 mongoose.connect('mongodb://localhost/social-network-API', {
   useFindAndModify: false,
   useNewUrlParser: true,
-  useUnifiedTopology: true
+  useUnifiedTopology: true,
+  useCreateIndex: true
 });
 
 // Use this to log mongo queries being executed!

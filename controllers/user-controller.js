@@ -1,14 +1,15 @@
 const {
-    User
+    User,
+    Thought
 } = require('../models');
 
-const userController = {
-    
+const UserController = {
+
     getAllUsers(req, res) {
         User.find({})
             .populate({
                 path: 'friends',
-                select: '-__v'
+                select: 'username'
             })
             .select('-__v')
             .sort({
@@ -21,12 +22,12 @@ const userController = {
             });
     },
 
-    
+
     getUserById({
         params
     }, res) {
         User.findOne({
-                _id: params.id
+                _id: params.userId
             })
             .populate({
                 path: 'friends',
@@ -48,7 +49,7 @@ const userController = {
             });
     },
 
-    
+
     createUser({
         body
     }, res) {
@@ -57,13 +58,13 @@ const userController = {
             .catch(err => res.status(400).json(err));
     },
 
-    
+
     updateUser({
         params,
         body
     }, res) {
         User.findOneAndUpdate({
-                _id: params.id
+                _id: params.userId
             }, body, {
                 new: true,
                 runValidators: true
@@ -84,7 +85,7 @@ const userController = {
         params
     }, res) {
         User.findOneAndDelete({
-                _id: params.id
+                _id: params.userId
             })
             .then(dbUserData => {
                 if (!dbUserData) {
@@ -93,7 +94,16 @@ const userController = {
                     });
                     return;
                 }
-                res.json(dbUserData);
+                if (dbUserData.thoughts) {
+                    return Thought.deleteMany({
+                        _id: {
+                            $in: [dbUserData.thoughts]
+                        }
+                    }).then(res.json(dbUserData));
+                } else {
+                    res.json(dbUserData);
+                }
+
             })
             .catch(err => res.status(400).json(err));
     },
@@ -108,8 +118,7 @@ const userController = {
                     friends: params.friendId
                 }
             }, {
-                new: true,
-                runValidators: true
+                new: true
             })
             .then(friendData => {
                 if (!friendData) {
@@ -118,7 +127,16 @@ const userController = {
                     });
                     return;
                 }
-                res.json(friendData);
+                return User.findOneAndUpdate({
+                        _id: params.friendId
+                    }, {
+                        $push: {
+                            friends: params.userId
+                        }
+                    }, {
+                        new: true
+                    })
+                    .then(res.json(friendData))
             })
             .catch(err => res.json(err))
     },
@@ -126,10 +144,33 @@ const userController = {
     deleteFriend({
         params
     }, res) {
-        User.findOneAndUpdate({_id: params.userId},
-            {$pull: {friends: params.friendId}},
-            {new: true})
-            .then(dbFriendData => res.json(dbFriendData))
+        User.findOneAndUpdate({
+                _id: params.userId
+            }, {
+                $pull: {
+                    friends: params.friendId
+                }
+            }, {
+                new: true
+            })
+            .then(friendData => {
+                if (!friendData) {
+                    res.status(404).json({
+                        message: 'No user found with this id!'
+                    });
+                    return;
+                }
+                return User.findOneAndUpdate({
+                        _id: params.friendId
+                    }, {
+                        $pull: {
+                            friends: params.userId
+                        }
+                    }, {
+                        new: true
+                    })
+                    .then(res.json(friendData))
+            })
             .catch(err => res.json(err))
     }
 }
