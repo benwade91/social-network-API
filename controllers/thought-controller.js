@@ -75,8 +75,7 @@ const ThoughtController = {
                     res.status(404).json({
                         message: 'that didnt work'
                     });
-                }
-                res.json(dbThoughtData)
+                }else{res.json(dbThoughtData)}
             })
             .catch(err => res.status(400).json(err));
     },
@@ -117,24 +116,26 @@ const ThoughtController = {
                     });
                     return;
                 }
+                // console.log(params);
+                // console.log(dbThoughtData);
                 return User.findOneAndUpdate({
                     _id: params.userId
                 }, {
                     $pull: {
-                        thoughts: {_id: params.thoughtId}
+                        thoughts: params.thoughtId
                     }
                 }, {
                     new: true
+                }).then(dbThoughtData => {
+                    console.log(dbThoughtData);
+                    if (!dbThoughtData) {
+                        res.status(404).json({
+                            message: 'No news found with this id!'
+                        });
+                        return;
+                    }
+                    res.json(dbThoughtData);
                 })
-            })
-            .then(dbPizzaData => {
-                if (!dbPizzaData) {
-                    res.status(404).json({
-                        message: 'No pizza found with this id!'
-                    });
-                    return;
-                }
-                res.json(dbPizzaData);
             })
             .catch(err => res.json(err));
     },
@@ -181,9 +182,9 @@ const ThoughtController = {
                     res.status(404).json({
                         message: 'No Thought found with this id!'
                     })
-                }
-                res.json(dbThoughtData)
-            })
+                }else{
+                res.json(dbThoughtData);
+            }})
             .catch(err => res.json(err))
     }
 }

@@ -7,10 +7,9 @@ const UserController = {
 
     getAllUsers(req, res) {
         User.find({})
-            .populate({
-                path: 'friends',
-                select: 'username'
-            })
+            // .populate({
+            //     path: 'friends'
+            // })
             .select('-__v')
             .sort({
                 _id: -1

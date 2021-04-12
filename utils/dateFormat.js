@@ -1,3 +1,6 @@
+// THIS DATE FORMATTING IS FROM THE WEEKS CLASSWORK. I DIDN'T CODE ANY OF THIS -Ben
+
+
 const addDateSuffix = date => {
   let dateStr = date.toString();
 
